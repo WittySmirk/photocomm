@@ -1,7 +1,7 @@
 #ifdef TRANSMITTER
     #include "transmitter.h"
 #elif defined(RECEIVER)
-    #include "reciever.h"
+    #include "receiver.h"
 #endif
 
 int main() {
@@ -9,6 +9,6 @@ int main() {
     #ifdef TRANSMITTER
         return transmitter();
     #elif defined(RECEIVER)
-        return reciever();
+        return receiver();
     #endif
 }
