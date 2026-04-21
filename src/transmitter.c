@@ -62,34 +62,35 @@ int transmitter() {
 }
 */
 
-bool transmit(char *message) {
-        int fd = open("/dev/cu.usbmodem21301", O_RDWR | O_NOCTTY);
-        if (fd < 0) {
-            fprintf(stderr, "open error\n");
-            return false;
+void renderText(SDL_Renderer* renderer, TTF_Font* font, char *text, int x, int y, bool center, SDL_Color color) {
+        SDL_Surface* surface = TTF_RenderText_Solid(font, text, color);
+
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+
+        // Query dimensions from the texture, not the freed surface
+        int w, h;
+        SDL_QueryTexture(texture, NULL, NULL, &w, &h);
+        SDL_Rect dst = {};
+        if (center) {
+            dst = (SDL_Rect){.x = (SCREEN_W / 2) - (w / 2), .y = (SCREEN_H / 2) - (h / 2), .w = w, .h = h};
+        } else {
+            dst = (SDL_Rect){.x = x, .y = y, .w = w, .h = h};
         }
 
-        struct termios tty;
-        tcgetattr(fd, &tty);
-        cfsetospeed(&tty, B9600);
-        cfsetispeed(&tty, B9600);
-        tcsetattr(fd, TCSANOW, &tty);
-
-        size_t len = strlen(message);
-        for (int i = 0; i < len; i++) {
-            displaybyte((unsigned char)message[i]);
-            write(fd, &message[i], 1);
-            usleep(50000);
-        }
-
-        close(fd);
-        return true;
+        SDL_RenderCopy(renderer, texture, NULL, &dst);
+        SDL_DestroyTexture(texture);
 }
 
-void displaybyte(unsigned char b) {
-    // TODO: make this display on SDL bit-by-bit
+void displaybyte(unsigned char b, char* byteString) {
     for (int i = 7; i >= 0; i--) {
         printf("%d", (b >> i) & 1);
+        char bit = '0' + ((b >> i) & 1);
+        if (strlen(byteString) != 0) {
+            strncat(byteString, " ", 1);
+        }
+        strncat(byteString, &bit, 1);
+
     }
     printf("\n");
 }
@@ -112,11 +113,16 @@ int transmitter() {
     SDL_Event e;
 
     TTF_Font* font = TTF_OpenFont("res/FiraSans-SemiBold.ttf", 100);
-    
-    SDL_Color crust = {.r = 17, .g = 17, .b = 27, .a = 255}; //rgb(17, 17, 27)
-    SDL_Color better = {.r = 245, .g = 224, .b = 220, .a = 255}; // rgb(245, 224, 220)
 
     char message[256] = "";
+    char byteString[256] = "";
+
+    bool transmitting = false;
+    int index = 0;
+    int fd = -1;
+    struct termios tty;
+
+    size_t len = 0;
 
     while(running) {
         while (SDL_PollEvent(&e)) {
@@ -131,9 +137,7 @@ int transmitter() {
                         }
                     break;
                     case SDLK_RETURN:
-                        if(!transmit(message)) {
-                            return -1;
-                        }
+                        transmitting = true;
                     break;
                     default:
                         char key = (char)e.key.keysym.sym;
@@ -146,29 +150,59 @@ int transmitter() {
             }
         }
 
+        if (transmitting) {
+            if (fd == -1) {
+                byteString[0] = '\0';
+                fd = open("/dev/cu.usbmodem21301", O_RDWR | O_NOCTTY);
+                if (fd < 0) {
+                    fprintf(stderr, "open error\n");
+                    return false;
+                }
+
+                tcgetattr(fd, &tty);
+                cfsetospeed(&tty, B9600);
+                cfsetispeed(&tty, B9600);
+                tcsetattr(fd, TCSANOW, &tty);
+
+                len = strlen(message);
+            }
+
+            if (index < len) {
+                displaybyte((unsigned char)message[index], byteString);
+                write(fd, &message[index], 1);
+                usleep(50000);
+                index++;
+            } else {
+                close(fd);
+                fd = -1;
+                index = 0;
+                len = 0;
+                transmitting = false;
+            }
+        }
+
         SDL_SetRenderDrawColor(renderer, 30, 30, 46, 255); //rgb(30, 30, 46)
 
 		SDL_RenderClear(renderer);
         
-        SDL_Surface* surface = NULL;
-        if (strlen(message) == 0) {
-            surface = TTF_RenderText_Solid(font, "Enter text", crust);
-        } else {
-            surface = TTF_RenderText_Solid(font, message, better);
+        if (!transmitting) {
+            TTF_SetFontSize(font, 100);
+            if (strlen(message) == 0) {
+                renderText(renderer, font, "Enter text", 0, 0, true, CRUST);
+            } else {
+                renderText(renderer, font, message, 0, 0, true, ROSEWATER);
+            }
         }
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_FreeSurface(surface);
-
-        // Query dimensions from the texture, not the freed surface
-        int w, h;
-        SDL_QueryTexture(texture, NULL, NULL, &w, &h);
-        SDL_Rect dst = {.x = (SCREEN_W / 2) - (w / 2), .y = (SCREEN_H / 2) - (h / 2), .w = w, .h = h};
-        SDL_RenderCopy(renderer, texture, NULL, &dst);
-        SDL_DestroyTexture(texture);
+        
+        if (transmitting) {
+            TTF_SetFontSize(font, 30);
+            renderText(renderer, font, byteString, 0, 0, true, ROSEWATER);
+        }
 
         SDL_RenderPresent(renderer);
     }
 
+    if (fd != -1) close(fd);
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
