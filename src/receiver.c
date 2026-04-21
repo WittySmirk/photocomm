@@ -77,7 +77,7 @@ int receiver() {
             int w = frame->width, h = frame->height;
 
             if(!window) {
-                window = SDL_CreateWindow("Stream Viewer",
+                window = SDL_CreateWindow("PhotoComm",
                     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                     w, h, 0);
                 renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);

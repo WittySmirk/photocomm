@@ -1,5 +1,6 @@
 #include "transmitter.h"
 
+/*
 int transmitter() {
     AVFormatContext* ctx = NULL;
 
@@ -56,5 +57,40 @@ int transmitter() {
     av_bsf_free(&bsfCtx);
     avformat_close_input(&ctx);
 
+    return 0;
+}
+*/
+
+void displaybyte(unsigned char b) {
+    // TODO: make this display on SDL bit-by-bit
+    for (int i = 7; i >= 0; i--) {
+        printf("%d", (b >> i) & 1);
+    }
+    printf("\n");
+}
+
+int transmitter() {
+    int fd = open("/dev/cu.usbmodem21301", O_RDWR | O_NOCTTY);
+    if (fd < 0) {
+        printf("open error\n");
+        return -1;
+    }
+
+    struct termios tty;
+    tcgetattr(fd, &tty);
+    cfsetospeed(&tty, B9600);
+    cfsetispeed(&tty, B9600);
+    tcsetattr(fd, TCSANOW, &tty);
+
+    const char * message = "Hello World";
+
+    size_t len = strlen(message);
+    for (int i = 0; i < len; i++) {
+        displaybyte((unsigned char)message[i]);
+        write(fd, &message[i], 1);
+        usleep(50000);
+    }
+
+    close(fd);
     return 0;
 }
