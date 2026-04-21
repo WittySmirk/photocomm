@@ -1,6 +1,7 @@
 #include "transmitter.h"
 
 /*
+TODO: transmit video
 int transmitter() {
     AVFormatContext* ctx = NULL;
 
@@ -61,6 +62,30 @@ int transmitter() {
 }
 */
 
+bool transmit(char *message) {
+        int fd = open("/dev/cu.usbmodem21301", O_RDWR | O_NOCTTY);
+        if (fd < 0) {
+            fprintf(stderr, "open error\n");
+            return false;
+        }
+
+        struct termios tty;
+        tcgetattr(fd, &tty);
+        cfsetospeed(&tty, B9600);
+        cfsetispeed(&tty, B9600);
+        tcsetattr(fd, TCSANOW, &tty);
+
+        size_t len = strlen(message);
+        for (int i = 0; i < len; i++) {
+            displaybyte((unsigned char)message[i]);
+            write(fd, &message[i], 1);
+            usleep(50000);
+        }
+
+        close(fd);
+        return true;
+}
+
 void displaybyte(unsigned char b) {
     // TODO: make this display on SDL bit-by-bit
     for (int i = 7; i >= 0; i--) {
@@ -69,28 +94,85 @@ void displaybyte(unsigned char b) {
     printf("\n");
 }
 
+
 int transmitter() {
-    int fd = open("/dev/cu.usbmodem21301", O_RDWR | O_NOCTTY);
-    if (fd < 0) {
-        printf("open error\n");
+    if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+        fprintf(stderr, "SDL init failed: %s\n", SDL_GetError());
         return -1;
     }
 
-    struct termios tty;
-    tcgetattr(fd, &tty);
-    cfsetospeed(&tty, B9600);
-    cfsetispeed(&tty, B9600);
-    tcsetattr(fd, TCSANOW, &tty);
-
-    const char * message = "Hello World";
-
-    size_t len = strlen(message);
-    for (int i = 0; i < len; i++) {
-        displaybyte((unsigned char)message[i]);
-        write(fd, &message[i], 1);
-        usleep(50000);
+    if (TTF_Init() < 0) {
+        fprintf(stderr, "SDL_ttf failed: %s\n", TTF_GetError());
     }
 
-    close(fd);
+    SDL_Window* window = SDL_CreateWindow("photocomm - transmitter", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, SDL_WINDOW_SHOWN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    bool running = true;
+    SDL_Event e;
+
+    TTF_Font* font = TTF_OpenFont("res/FiraSans-SemiBold.ttf", 100);
+    
+    SDL_Color crust = {.r = 17, .g = 17, .b = 27, .a = 255}; //rgb(17, 17, 27)
+    SDL_Color better = {.r = 245, .g = 224, .b = 220, .a = 255}; // rgb(245, 224, 220)
+
+    char message[256] = "";
+
+    while(running) {
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_KEYDOWN) {
+                switch (e.key.keysym.sym) {
+                    case SDLK_ESCAPE:
+                        running = false;
+                    break;
+                    case SDLK_BACKSPACE:
+                        if (strlen(message) > 0) {
+                            message[strlen(message) - 1] = '\0';
+                        }
+                    break;
+                    case SDLK_RETURN:
+                        if(!transmit(message)) {
+                            return -1;
+                        }
+                    break;
+                    default:
+                        char key = (char)e.key.keysym.sym;
+                        strncat(message, &key, 1);
+                    break;
+                }
+            }
+            if (e.type == SDL_QUIT) {
+                running = false;
+            }
+        }
+
+        SDL_SetRenderDrawColor(renderer, 30, 30, 46, 255); //rgb(30, 30, 46)
+
+		SDL_RenderClear(renderer);
+        
+        SDL_Surface* surface = NULL;
+        if (strlen(message) == 0) {
+            surface = TTF_RenderText_Solid(font, "Enter text", crust);
+        } else {
+            surface = TTF_RenderText_Solid(font, message, better);
+        }
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+
+        // Query dimensions from the texture, not the freed surface
+        int w, h;
+        SDL_QueryTexture(texture, NULL, NULL, &w, &h);
+        SDL_Rect dst = {.x = (SCREEN_W / 2) - (w / 2), .y = (SCREEN_H / 2) - (h / 2), .w = w, .h = h};
+        SDL_RenderCopy(renderer, texture, NULL, &dst);
+        SDL_DestroyTexture(texture);
+
+        SDL_RenderPresent(renderer);
+    }
+
+    TTF_CloseFont(font);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
     return 0;
 }
