@@ -183,7 +183,7 @@ int transmitter() {
 
         SDL_SetRenderDrawColor(renderer, 30, 30, 46, 255); //rgb(30, 30, 46)
 
-		SDL_RenderClear(renderer);
+	SDL_RenderClear(renderer);
         
         if (!transmitting) {
             TTF_SetFontSize(font, 100);

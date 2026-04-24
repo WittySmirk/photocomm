@@ -1,5 +1,6 @@
 #include "receiver.h"
 
+/*
 int receiver() {
     const AVCodec* codec = avcodec_find_decoder(AV_CODEC_ID_H264);
     if(!codec) {
@@ -105,7 +106,7 @@ int receiver() {
                 if (e.type == SDL_QUIT) goto done;
 
             av_frame_unref(frame);
-        }
+}
 
         if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
             fprintf(stderr, "Error receiving frame: %s\n", av_err2str(ret));
@@ -122,5 +123,42 @@ done:
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window)   SDL_DestroyWindow(window);
     SDL_Quit();
+    return 0;
+}
+*/
+
+int receiver() {
+    if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+        fprintf(stderr, "SDL init failed: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    if (TTF_Init() < 0) {
+        fprintf(stderr, "SDL_ttf failed: %s\n", TTF_GetError());
+    }
+
+    
+    SDL_Window* window = SDL_CreateWindow("photocomm - transmitter", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    SDL_Event e;
+    bool running = true;
+
+    while(running) {
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) {
+                running = false;
+            }
+        }
+        SDL_SetRenderDrawColor(renderer, 30, 30, 46, 255);
+
+        SDL_RenderClear(renderer);
+        SDL_RenderPresent(renderer);
+    }
+
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
     return 0;
 }

@@ -1,9 +1,8 @@
 #ifndef RECIEVER_H
 #define RECIEVER_H
 #include "SDL.h"
-#include <libavcodec/avcodec.h>
-#include <libavutil/imgutils.h>
-#include <libswscale/swscale.h>
+#include "SDL_ttf.h"
+#include "stdbool.h"
 
 #include "stdio.h"
 

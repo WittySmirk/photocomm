@@ -2,8 +2,6 @@
 #define TRANSMITTER_H
 #include "SDL.h"
 #include "SDL_ttf.h"
-#include <libavformat/avformat.h>
-#include <libavcodec/bsf.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <termios.h>
