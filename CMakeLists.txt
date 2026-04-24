@@ -49,4 +49,5 @@ target_link_libraries(receiver PRIVATE
     #"${FFMPEG_DIR}/lib/libswresample.dylib"
     SDL2::SDL2
     SDL2_ttf::SDL2_ttf
+    lgpio
 )
