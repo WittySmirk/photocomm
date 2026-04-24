@@ -126,6 +126,7 @@ done:
     return 0;
 }
 */
+
 int rx_byte(void) {
     int timeout_us = 250000;
 
@@ -169,7 +170,7 @@ int receiver() {
         fprintf(stderr, "SDL_ttf failed: %s\n", TTF_GetError());
     }
     
-    SDL_Window* window = SDL_CreateWindow("photocomm - transmitter", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("photocomm - receiver", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     SDL_Event e;
