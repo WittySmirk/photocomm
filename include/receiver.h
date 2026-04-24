@@ -23,6 +23,8 @@ static volatile int running = 1;
 static char rx_result[RX_BUF];
 static volatile int rx_done = 0;
 
+static inline void delay_us(double us) { lguSleep(us / 1e6); }
+
 int rx_byte(void);
 void print_byte(int idx, unsigned char b);
 
