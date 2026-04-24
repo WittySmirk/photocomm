@@ -13,7 +13,7 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 find_package(SDL2 REQUIRED COMPONENTS SDL2)
 find_package(SDL2_ttf REQUIRED)
 
-add_executable(transmitter src/main.c src/transmitter.c)
+add_executable(transmitter src/main.c src/transmitter.c src/shared.c)
 
 target_compile_definitions(transmitter PRIVATE TRANSMITTER)
 
@@ -32,7 +32,7 @@ target_link_libraries(transmitter PRIVATE
     SDL2_ttf::SDL2_ttf
 )
 
-add_executable(receiver src/main.c src/receiver.c)
+add_executable(receiver src/main.c src/receiver.c src/shared.c)
 
 target_compile_definitions(receiver PRIVATE RECEIVER)
 

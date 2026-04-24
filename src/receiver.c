@@ -126,6 +126,38 @@ done:
     return 0;
 }
 */
+int rx_byte(void) {
+    int timeout_us = 250000;
+
+    /* wait for start bit — line leaves idle state */
+    while (lgGpioRead(gh, RX_GPIO) == RX_IDLE_LEVEL) {
+        delay_us(1);
+        if (--timeout_us <= 0) return -1;
+    }
+
+    /* sample middle of start bit to confirm genuine */
+    delay_us(HALF_BIT);
+    if (lgGpioRead(gh, RX_GPIO) == RX_IDLE_LEVEL) return -1;
+
+    unsigned char b = 0;
+    for (int i = 0; i < 8; i++) {
+        delay_us(BIT_US);
+        int bit = lgGpioRead(gh, RX_GPIO);
+        if (RX_IDLE_LEVEL == 0) bit = !bit;
+        if (bit) b |= (1 << i);
+    }
+
+    delay_us(BIT_US); /* consume stop bit */
+    return (int)b;
+}
+
+void print_byte(int idx, unsigned char b) {
+    printf("byte %2d: ", idx);
+    for (int i = 7; i >= 0; i--)
+        printf("%d", (b >> i) & 1);
+    printf("0x%02X  '%c'\n", b, (b >= 32 && b < 127) ? b : '.');
+    fflush(stdout);
+}
 
 int receiver() {
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -136,23 +168,49 @@ int receiver() {
     if (TTF_Init() < 0) {
         fprintf(stderr, "SDL_ttf failed: %s\n", TTF_GetError());
     }
-
     
-    SDL_Window* window = SDL_CreateWindow("photocomm - transmitter", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("photocomm - transmitter", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     SDL_Event e;
     bool running = true;
 
+    TTF_Font* font = TTF_OpenFont("res/FiraSans-SemiBold.ttf", 100);
+
+    //TODO: extend logic to work better
     while(running) {
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) {
                 running = false;
             }
         }
-        SDL_SetRenderDrawColor(renderer, 30, 30, 46, 255);
+        int idx = 0;
+
+        int b = rx_byte();
+        if (b >= 0) {
+            print_byte(idx + 1, (unsigned char)b);
+            if (idx < RX_BUF - 1) rx_result[idx] = (char)b;
+        } else {
+            printf("RX byte %2d: [timeout]\n", idx + 1);
+            fflush(stdout);
+        }
+        idx++;
+
+        rx_result[idx] = '\0';
+        rx_done = 1;
+
+        SDL_SetRenderDrawColor(renderer, BACKGROUND.r, BACKGROUND.g, BACKGROUND.b, BACKGROUND.a); //rgb(30, 30, 46)
 
         SDL_RenderClear(renderer);
+        
+        if (idx == 0) {
+            TTF_SetFontSize(font, 100);
+            renderText(renderer, font, "Send a message", 0, 0, true, CRUST);
+        } else {
+            TTF_SetFontSize(font, 30);
+            renderText(renderer, font, rx_result, 0, 0, true, ROSEWATER);
+        }
+
         SDL_RenderPresent(renderer);
     }
 
