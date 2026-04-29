@@ -26,7 +26,6 @@ void transmitByte(byte b) {
   digitalWrite(LASER_PIN, HIGH);
   delayMicroseconds(BIT_US);
   for (int i = 0; i < 8; i++) {
-    bool bit = (b >> i) & 1;
     digitalWrite(LASER_PIN, (b >> i) & 1 ? HIGH : LOW);
     delayMicroseconds(BIT_US);
   }

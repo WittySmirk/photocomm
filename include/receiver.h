@@ -9,7 +9,7 @@
 
 #define GPIOCHIP 0 
 #define RX_GPIO 24
-#define RX_IDLE_LEVEL 1 // idle HIGH (dark)
+#define RX_IDLE_LEVEL 0 
 
 #define HALF_BIT (BIT_US / 2.0)
 #define MSG_COUNT 2
