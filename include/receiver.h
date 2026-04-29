@@ -6,6 +6,7 @@
 #include "shared.h"
 #include "lgpio.h" //TODO: make cmake have command to make either transmitter or receiver
 #include "stdio.h"
+#include "pthread.h"
 
 #define GPIOCHIP 0 
 #define RX_GPIO 24
@@ -23,6 +24,10 @@ static volatile int rx_done = 0;
 
 static inline void delay_us(double us) { lguSleep(us / 1e6); }
 
+static pthread_t rx_tid;
+static volatile int rx_running = 0;
+
+void *rx_thread() {}
 int rx_byte(void);
 void print_byte(int idx, unsigned char b);
 

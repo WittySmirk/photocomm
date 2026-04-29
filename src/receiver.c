@@ -127,6 +127,19 @@ done:
 }
 */
 
+void *rx_thread(void *arg) {
+    int idx = 0;
+    while (running) {
+        int b = rx_byte();
+        if (b >= 0 && idx < RX_BUF - 1) {
+            rx_result[idx++] = (char)b;
+            rx_result[idx] = '\0';
+            rx_done = 1;
+        }
+    }
+    return NULL;
+}
+
 int rx_byte(void) {
     int timeout_us = 250000;
 
@@ -166,7 +179,11 @@ int receiver() {
         fprintf(stderr, "Failed to open gpiochip%d — run with sudo\n", GPIOCHIP);
         return 1;
     }
+    
     lgGpioClaimInput(gh, LG_SET_PULL_UP, RX_GPIO);
+
+    pthread_t tid;
+    pthread_create(&tid, NULL, rx_thread, NULL);
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "SDL init failed: %s\n", SDL_GetError());
@@ -181,15 +198,15 @@ int receiver() {
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     SDL_Event e;
-    bool running = true;
+    bool r = true;
 
     TTF_Font* font = TTF_OpenFont("res/FiraSans-SemiBold.ttf", 100);
 
     //TODO: extend logic to work better
-    while(running) {
+    while(r) {
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) {
-                running = false;
+                r = false;
             }
         }
         int idx = 0;
@@ -211,7 +228,7 @@ int receiver() {
 
         SDL_RenderClear(renderer);
         
-        if (idx == 0) {
+        if (strlen(rx_result) == 0) {
             TTF_SetFontSize(font, 100);
             renderText(renderer, font, "Send a message", 0, 0, true, CRUST);
         } else {
@@ -221,6 +238,8 @@ int receiver() {
 
         SDL_RenderPresent(renderer);
     }
+    
+    pthread_join(tid, NULL);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
