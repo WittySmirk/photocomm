@@ -209,21 +209,6 @@ int receiver() {
                 r = false;
             }
         }
-        int idx = 0;
-
-        int b = rx_byte();
-        if (b >= 0) {
-            print_byte(idx + 1, (unsigned char)b);
-            if (idx < RX_BUF - 1) rx_result[idx] = (char)b;
-        } else {
-            printf("RX byte %2d: [timeout]\n", idx + 1);
-            fflush(stdout);
-        }
-        idx++;
-
-        rx_result[idx] = '\0';
-        rx_done = 1;
-
         SDL_SetRenderDrawColor(renderer, BACKGROUND.r, BACKGROUND.g, BACKGROUND.b, BACKGROUND.a); //rgb(30, 30, 46)
 
         SDL_RenderClear(renderer);
