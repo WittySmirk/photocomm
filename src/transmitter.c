@@ -133,7 +133,7 @@ int transmitter() {
         if (transmitting) {
             if (fd == -1) {
                 byteString[0] = '\0';
-                fd = open("/dev/cu.usbmodem21301", O_RDWR | O_NOCTTY);
+                fd = open("/dev/cu.usbmodem101", O_RDWR | O_NOCTTY); // TODO: make this a cli argument
                 if (fd < 0) {
                     fprintf(stderr, "open error\n");
                     return false;

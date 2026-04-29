@@ -1,5 +1,9 @@
+#define LASER_PIN 13
+#define BAUD 1200
+#define BIT_US (1000000.0 / BAUD)
+
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LASER_PIN, OUTPUT);
   Serial.begin(9600);
 }
 
@@ -19,14 +23,15 @@ void transmitByte(byte b) {
 */
 
 void transmitByte(byte b) {
-  for (int i = 7; i >= 0; i--) {
+  digitalWrite(LASER_PIN, HIGH);
+  delayMicroSeconds(BIT_US);
+  for (int i = 0; i < 8; i++) {
     bool bit = (b >> i) & 1;
-    if (bit) {
-      digitalWrite(LED_BUILTIN, HIGH);
-    } else {
-      digitalWrite(LED_BUILTIN, LOW);
-    }
+    digitalWrite(LASER_PIN, (b >> i) & 1 ? HIGH : LOW);
+    delayMicroSeconds(BIT_US);
   }
+  digitalWrite(LASER_PIN, LOW);
+  delayMicroSeconds(BIT_US*1.5);
 }
 
 void loop() {
