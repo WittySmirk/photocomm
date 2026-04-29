@@ -161,6 +161,13 @@ void print_byte(int idx, unsigned char b) {
 }
 
 int receiver() {
+    gh = lgGpiochipOpen(GPIOCHIP);
+    if (gh < 0) {
+        fprintf(stderr, "Failed to open gpiochip%d — run with sudo\n", GPIOCHIP);
+        return 1;
+    }
+    lgGpioClaimInput(gh, LG_SET_PULL_UP, RX_GPIO);
+
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "SDL init failed: %s\n", SDL_GetError());
         return -1;

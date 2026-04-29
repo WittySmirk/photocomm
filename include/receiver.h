@@ -7,7 +7,7 @@
 #include "lgpio.h" //TODO: make cmake have command to make either transmitter or receiver
 #include "stdio.h"
 
-#define GPIOCHIP 4
+#define GPIOCHIP 0 
 #define RX_GPIO 24
 #define RX_IDLE_LEVEL 1 // idle HIGH (dark)
 
