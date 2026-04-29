@@ -198,15 +198,14 @@ int receiver() {
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     SDL_Event e;
-    bool r = true;
 
     TTF_Font* font = TTF_OpenFont("res/FiraSans-SemiBold.ttf", 100);
 
     //TODO: extend logic to work better
-    while(r) {
+    while(running) {
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) {
-                r = false;
+                running = 0;
             }
         }
         SDL_SetRenderDrawColor(renderer, BACKGROUND.r, BACKGROUND.g, BACKGROUND.b, BACKGROUND.a); //rgb(30, 30, 46)
@@ -225,6 +224,7 @@ int receiver() {
     }
     
     pthread_join(tid, NULL);
+    TTF_CloseFont(font);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
