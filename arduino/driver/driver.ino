@@ -24,14 +24,14 @@ void transmitByte(byte b) {
 
 void transmitByte(byte b) {
   digitalWrite(LASER_PIN, HIGH);
-  delayMicroSeconds(BIT_US);
+  delayMicroseconds(BIT_US);
   for (int i = 0; i < 8; i++) {
     bool bit = (b >> i) & 1;
     digitalWrite(LASER_PIN, (b >> i) & 1 ? HIGH : LOW);
-    delayMicroSeconds(BIT_US);
+    delayMicroseconds(BIT_US);
   }
   digitalWrite(LASER_PIN, LOW);
-  delayMicroSeconds(BIT_US*1.5);
+  delayMicroseconds(BIT_US*1.5);
 }
 
 void loop() {
