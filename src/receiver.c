@@ -131,7 +131,11 @@ void *rx_thread(void *arg) {
     int idx = 0;
     while (running) {
         int b = rx_byte();
+        printf("rx_byte returned: %d\n", b);  // add this
+        fflush(stdout);
         if (b >= 0 && idx < RX_BUF - 1) {
+            printf("got char: %c\n", (char)b);  // add this
+            fflush(stdout);
             rx_result[idx++] = (char)b;
             rx_result[idx] = '\0';
             rx_done = 1;
@@ -225,7 +229,6 @@ int receiver() {
     
     pthread_join(tid, NULL);
     TTF_CloseFont(font);
-
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

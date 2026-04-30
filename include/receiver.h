@@ -27,7 +27,7 @@ static inline void delay_us(double us) { lguSleep(us / 1e6); }
 static pthread_t rx_tid;
 static volatile int rx_running = 0;
 
-void *rx_thread();
+void *rx_thread(void *arg);
 int rx_byte(void);
 void print_byte(int idx, unsigned char b);
 
