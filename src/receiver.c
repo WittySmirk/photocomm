@@ -182,7 +182,7 @@ int receiver() {
         return 1;
     }
     
-    lgGpioClaimInput(gh, LG_SET_PULL_UP, RX_GPIO);
+    lgGpioClaimInput(gh, LG_SET_PULL_NONE, RX_GPIO);
 
     pthread_t tid;
     pthread_create(&tid, NULL, rx_thread, NULL);
