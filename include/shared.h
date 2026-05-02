@@ -7,7 +7,7 @@
 
 #define SCREEN_W 1280
 #define SCREEN_H 720
-#define BAUD 1200
+#define BAUD 300
 #define BIT_US (1000000.0 / BAUD)
 
 static const SDL_Color CRUST = {.r = 17, .g = 17, .b = 27, .a = 255}; //rgb(17, 17, 27)

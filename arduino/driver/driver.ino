@@ -1,36 +1,31 @@
-#define LASER_PIN 13
-#define BAUD 1200
+#define LASER_PIN 21
+#define BAUD 300
 #define BIT_US (1000000.0 / BAUD)
 
 void setup() {
-  pinMode(LASER_PIN, OUTPUT);
   Serial.begin(9600);
+  pinMode(LASER_PIN, OUTPUT);
+  digitalWrite(LASER_PIN, LOW); // idle LOW = laser OFF
 }
 
-/*
-Potential speed update:
-
 void transmitByte(byte b) {
-    for (int i = 7; i >= 0; i--) {
-        if ((b >> i) & 1)
-            PORTB |= (1 << 1);   // pin 9 HIGH (PB1)
-        else
-            PORTB &= ~(1 << 1);  // pin 9 LOW
-        delayMicroseconds(BIT_DELAY_US);
-    }
-    PORTB &= ~(1 << 1);
-}
-*/
+  // Start bit: laser ON
+  digitalWrite(LASER_PIN, HIGH);
+  delayMicroseconds(BIT_US);
 
-void transmitByte(byte b) {
-    digitalWrite(LASER_PIN, HIGH);   // start bit
+  // 8 data bits, LSB first
+  for (int i = 0; i < 8; i++) {
+    digitalWrite(LASER_PIN, (b >> i) & 1 ? HIGH : LOW);
     delayMicroseconds(BIT_US);
-    for (int i = 0; i < 8; i++) {   // LSB first
-        digitalWrite(LASER_PIN, (b >> i) & 1 ? HIGH : LOW);
-        delayMicroseconds(BIT_US);
-    }
-    digitalWrite(LASER_PIN, LOW);    // stop bit
-    delayMicroseconds(BIT_US * 1.5);
+  }
+
+  // Stop bit: laser OFF
+  digitalWrite(LASER_PIN, LOW);
+  delayMicroseconds(BIT_US * 1.5);
+}
+
+void transmitString(const char* s) {
+  while (*s) transmitByte((unsigned char)*s++);
 }
 
 void loop() {
