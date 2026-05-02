@@ -146,25 +146,28 @@ void *rx_thread(void *arg) {
 
 int rx_byte(void) {
     int timeout_us = 500000;
-
-    while (lgGpioRead(gh, RX_GPIO) == 0) {
+    
+    // wait for stable HIGH (start bit)
+    while (1) {
+        if (lgGpioRead(gh, RX_GPIO) == 1) {
+            delay_us(500); // wait 0.5ms
+            if (lgGpioRead(gh, RX_GPIO) == 1) break; // confirmed stable
+        }
         delay_us(1);
         if (--timeout_us <= 0) return -1;
     }
 
-    delay_us(BIT_US * 0.5);
-    if (lgGpioRead(gh, RX_GPIO) == 0) return -1;
+    // sample middle of first data bit
+    delay_us(BIT_US * 1.5);
 
-    delay_us(BIT_US);
     unsigned char b = 0;
     for (int i = 0; i < 8; i++) {
         int bit = lgGpioRead(gh, RX_GPIO);
-        printf("bit %d: %d\n", i, bit); // debug
-        fflush(stdout);
         if (bit) b |= (1 << i);
         delay_us(BIT_US);
     }
 
+    delay_us(BIT_US);
     return (int)b;
 }
 
@@ -204,9 +207,8 @@ int receiver() {
     
     lgGpioClaimInput(gh, LG_SET_PULL_NONE, RX_GPIO);
 
-    /*pthread_t tid;
-    pthread_create(&tid, NULL, rx_thread, NULL);*/
-    monitor_raw();
+    pthread_t tid;
+    pthread_create(&tid, NULL, rx_thread, NULL);
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "SDL init failed: %s\n", SDL_GetError());
@@ -238,15 +240,14 @@ int receiver() {
         if (strlen(rx_result) == 0) {
             TTF_SetFontSize(font, 100);
             renderText(renderer, font, "Send a message", 0, 0, true, CRUST);
-        } else {
-            TTF_SetFontSize(font, 30);
+        } else { TTF_SetFontSize(font, 30);
             renderText(renderer, font, rx_result, 0, 0, true, ROSEWATER);
         }
 
         SDL_RenderPresent(renderer);
     }
     
-    //pthread_join(tid, NULL);
+    pthread_join(tid, NULL);
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

@@ -6,6 +6,7 @@ void setup() {
   Serial.begin(9600);
   pinMode(LASER_PIN, OUTPUT);
   digitalWrite(LASER_PIN, LOW); // idle LOW = laser OFF
+  transmitByte(0xAA);
 }
 
 void transmitByte(byte b) {
@@ -36,6 +37,4 @@ void loop() {
   //   transmitByte(0xFF);
   //   delay(500);
   // }
-  transmitByte(0xAA);
-  delay(500);
 }
