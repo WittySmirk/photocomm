@@ -34,6 +34,7 @@ static inline void delay_us(double us) {
 
 static pthread_t rx_tid;
 static volatile int rx_running = 0;
+void monitor_raw();
 
 void *rx_thread(void *arg);
 int rx_byte(void);

@@ -168,6 +168,25 @@ int rx_byte(void) {
     return (int)b;
 }
 
+void monitor_raw() {
+    int last = 0;
+    int current;
+    struct timespec ts;
+    
+    printf("monitoring raw GPIO...\n");
+    fflush(stdout);
+    
+    while(1) {
+        current = lgGpioRead(gh, RX_GPIO);
+        if (current != last) {
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            printf("%ld.%06ld: %d\n", ts.tv_sec, ts.tv_nsec/1000, current);
+            fflush(stdout);
+            last = current;
+        }
+    }
+}
+
 void print_byte(int idx, unsigned char b) {
     printf("byte %2d: ", idx);
     for (int i = 7; i >= 0; i--)
@@ -185,8 +204,9 @@ int receiver() {
     
     lgGpioClaimInput(gh, LG_SET_PULL_NONE, RX_GPIO);
 
-    pthread_t tid;
-    pthread_create(&tid, NULL, rx_thread, NULL);
+    /*pthread_t tid;
+    pthread_create(&tid, NULL, rx_thread, NULL);*/
+    monitor_raw();
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "SDL init failed: %s\n", SDL_GetError());
