@@ -147,26 +147,24 @@ void *rx_thread(void *arg) {
 int rx_byte(void) {
     int timeout_us = 500000;
 
-    // wait for line to go HIGH (start bit)
     while (lgGpioRead(gh, RX_GPIO) == 0) {
         delay_us(1);
         if (--timeout_us <= 0) return -1;
     }
 
-    // confirm it's still HIGH at middle of start bit
     delay_us(BIT_US * 0.5);
-    if (lgGpioRead(gh, RX_GPIO) == 0) return -1; // was a glitch, ignore
+    if (lgGpioRead(gh, RX_GPIO) == 0) return -1;
 
-    // now sample middle of each data bit
     delay_us(BIT_US);
     unsigned char b = 0;
     for (int i = 0; i < 8; i++) {
         int bit = lgGpioRead(gh, RX_GPIO);
+        printf("bit %d: %d\n", i, bit); // debug
+        fflush(stdout);
         if (bit) b |= (1 << i);
         delay_us(BIT_US);
     }
 
-    delay_us(BIT_US); // stop bit
     return (int)b;
 }
 
