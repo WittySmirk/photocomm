@@ -6,7 +6,6 @@ void setup() {
   Serial.begin(9600);
   pinMode(LASER_PIN, OUTPUT);
   digitalWrite(LASER_PIN, LOW); // idle LOW = laser OFF
-  transmitByte(0xAA);
 }
 
 void transmitByte(byte b) {
@@ -32,9 +31,15 @@ void transmitString(const char* s) {
 }
 
 void loop() {
-  // if (Serial.available() > 0) {
-  //   byte incoming = Serial.read();
-  //   transmitByte(0xFF);
-  //   delay(500);
-  // }
+  if (Serial.available() > 0) {
+    byte incoming = Serial.read();
+    transmitByte(incoming);
+    // delay(500);
+  }
+  // transmitByte('a');
+  // delay(500);
+  // transmitByte('b');
+  // delay(500);
+  // transmitByte('c');
+  // delay(500);
 }
