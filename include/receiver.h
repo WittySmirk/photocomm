@@ -22,7 +22,15 @@ static volatile int running = 1;
 static char rx_result[RX_BUF];
 static volatile int rx_done = 0;
 
-static inline void delay_us(double us) { lguSleep(us / 1e6); }
+//static inline void delay_us(double us) { lguSleep(us / 1e6); }
+static inline void delay_us(double us) {
+    struct timespec start, now;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    do {
+        clock_gettime(CLOCK_MONOTONIC, &now);
+    } while ((now.tv_sec - start.tv_sec) * 1e6 +
+             (now.tv_nsec - start.tv_nsec) / 1e3 < us);
+}
 
 static pthread_t rx_tid;
 static volatile int rx_running = 0;
