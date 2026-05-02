@@ -9,19 +9,21 @@ void setup() {
 }
 
 void transmitByte(byte b) {
-  // Start bit: laser ON
-  digitalWrite(LASER_PIN, HIGH);
-  delayMicroseconds(BIT_US);
-
-  // 8 data bits, LSB first
+  unsigned long t = micros();
+  
+  digitalWrite(LASER_PIN, HIGH); // start bit
+  t += BIT_US;
+  while(micros() < t);
+  
   for (int i = 0; i < 8; i++) {
     digitalWrite(LASER_PIN, (b >> i) & 1 ? HIGH : LOW);
-    delayMicroseconds(BIT_US);
+    t += BIT_US;
+    while(micros() < t);
   }
 
-  // Stop bit: laser OFF
-  digitalWrite(LASER_PIN, LOW);
-  delayMicroseconds(BIT_US * 1.5);
+  digitalWrite(LASER_PIN, LOW); // stop bit
+  t += BIT_US * 1.5;
+  while(micros() < t);
 }
 
 void transmitString(const char* s) {
@@ -29,8 +31,11 @@ void transmitString(const char* s) {
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    byte incoming = Serial.read();
-    transmitByte(incoming);
-  }
+  // if (Serial.available() > 0) {
+  //   byte incoming = Serial.read();
+  //   transmitByte(0xFF);
+  //   delay(500);
+  // }
+  transmitByte(0xAA);
+  delay(500);
 }

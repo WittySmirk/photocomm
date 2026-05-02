@@ -246,7 +246,7 @@ int receiver() {
         SDL_RenderPresent(renderer);
     }
     
-    pthread_join(tid, NULL);
+    //pthread_join(tid, NULL);
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
