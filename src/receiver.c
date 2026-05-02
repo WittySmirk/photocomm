@@ -145,26 +145,25 @@ void *rx_thread(void *arg) {
 }
 
 int rx_byte(void) {
-    int timeout_us = 250000;
+    int timeout_us = 500000;
 
-    // wait for start bit — line goes HIGH
-    while (lgGpioRead(gh, RX_GPIO) == 0) {
+    // wait for start bit — line goes LOW (laser ON)
+    while (lgGpioRead(gh, RX_GPIO) == 1) {
         delay_us(1);
         if (--timeout_us <= 0) return -1;
     }
 
-    // sample middle of start bit to confirm genuine
-    delay_us(HALF_BIT);
-    if (lgGpioRead(gh, RX_GPIO) == 0) return -1;
+    // wait to middle of first data bit
+    delay_us(BIT_US * 1.5);
 
     unsigned char b = 0;
     for (int i = 0; i < 8; i++) {
-        delay_us(BIT_US);
-        int bit = lgGpioRead(gh, RX_GPIO);  // HIGH = 1, LOW = 0, no inversion
+        int bit = !lgGpioRead(gh, RX_GPIO); // invert: LOW = laser ON = 1
         if (bit) b |= (1 << i);
+        delay_us(BIT_US);
     }
 
-    delay_us(BIT_US); // consume stop bit
+    delay_us(BIT_US); // stop bit
     return (int)b;
 }
 
